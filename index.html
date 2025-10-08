@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Tracker - Frappe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Header Styles */
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .logo svg {
+            margin-right: 10px;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-menu a:hover, .nav-menu a.active {
+            color: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Main Container */
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 2rem auto;
+            gap: 2rem;
+            padding: 0 2rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            text-decoration: none;
+            color: #666;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .sidebar-menu .icon {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .content-header h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .stat-trend {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Tables */
+        .data-table {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .search-box {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            width: 250px;
+            transition: border-color 0.3s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        tr:hover td {
+            background: #f5f5f5;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4f4dd;
+            color: #2e7d32;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Forms */
+        .form-section {
+            display: none;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Charts */
+        .chart-container {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0),
+                        linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            border-radius: 8px;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .nav-menu {
+                display: none;
+            }
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .logic-description {
+            margin-top: 15px; 
+            padding: 10px; 
+            border: 1px dashed #667eea; 
+            border-radius: 5px; 
+            background: #f0f2ff;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+                Student Tracker
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#" class="active" data-section="dashboard" onclick="showSection('dashboard', this)">Dashboard</a></li>
+                    <li><a href="#" data-section="students" onclick="showSection('students', this)">Students</a></li>
+                    <li><a href="#" data-section="attendance" onclick="showSection('attendance', this)">Attendance</a></li>
+                    <li><a href="#" data-section="grades" onclick="showSection('grades', this)">Grades</a></li>
+                    <li><a href="#" data-section="course-management" onclick="showSection('course-management', this)">Courses</a></li>
+                    <li><a href="#" data-section="reports" onclick="showSection('reports', this)">Reports</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <span>Admin User</span>
+                <div class="user-avatar">AU</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <h3>Quick Access</h3>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" data-section="dashboard" onclick="showSection('dashboard', this)">
+                    <span class="icon">📊</span> Dashboard
+                </a></li>
+                <li><a href="#" data-section="students" onclick="showSection('students', this)">
+                    <span class="icon">👥</span> Student Master
+                </a></li>
+                <li><a href="#" data-section="attendance" onclick="showSection('attendance', this)">
+                    <span class="icon">✅</span> Attendance Record
+                </a></li>
+                <li><a href="#" data-section="grades" onclick="showSection('grades', this)">
+                    <span class="icon">📝</span> Grade Sheet
+                </a></li>
+                <li><a href="#" data-section="course-management" onclick="showSection('course-management', this)">
+                    <span class="icon">📚</span> Course Management
+                </a></li>
+                <li><a href="#" data-section="reports" onclick="showSection('reports', this)">
+                    <span class="icon">📈</span> Analytics
+                </a></li>
+                <li><a href="#" onclick="alert('Opening Communication Portal...')">
+                    <span class="icon">💬</span> Messages
+                </a></li>
+                <li><a href="#" onclick="alert('Opening Settings...')">
+                    <span class="icon">⚙️</span> Settings
+                </a></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <div id="dashboard" class="section fade-in">
+                <div class="content-header">
+                    <h1>Dashboard Overview</h1>
+                    <div class="breadcrumb">
+                        <span>Home</span> / <span>Dashboard</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">5,234</div>
+                        <div class="stat-label">Total Students</div>
+                        <div class="stat-trend">↑ 12%</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                        <div class="stat-value">92.5%</div>
+                        <div class="stat-label">Avg Attendance</div>
+                        <div class="stat-trend">↑ 3%</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                        <div class="stat-value">156</div>
+                        <div class="stat-label">Classes Today</div>
+                        <div class="stat-trend">→ 0%</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                        <div class="stat-value">3.8</div>
+                        <div class="stat-label">Avg GPA</div>
+                        <div class="stat-trend">↑ 5%</div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="action-btn" onclick="showModal('addStudent')">+ Add Student</button>
+                    <button class="action-btn" onclick="showSection('attendance', document.querySelector('.sidebar-menu a[data-section=\'attendance\']'))">Mark Attendance</button>
+                    <button class="action-btn" onclick="showModal('generateReport')">Generate Report</button>
+                    <button class="action-btn" onclick="alert('Opening notifications...')">View Alerts</button>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Performance Trends</h3>
+                    <div class="chart-placeholder">
+                        [Interactive Chart: Student Performance Over Time]
+                    </div>
+                </div>
+            </div>
+
+            <div id="students" class="section" style="display: none;">
+                <div class="content-header">
+                    <h1>Student Master (DocType)</h1>
+                    <div class="breadcrumb">
+                        <span>Home</span> / <span>Student Master</span>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <input type="text" class="search-box" placeholder="Search students...">
+                        <button class="btn-primary" onclick="showModal('addStudent')">+ Add New Student</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>DOB</th>
+                                <th>Address</th>
+                                <th>Contact</th>
+                                <th>Emergency Contact</th>
+                                <th>Parent/Guardian</th>
+                                <th>Class/Section</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SM-001</td>
+                                <td>Anya Sharma</td>
+                                <td>2008-05-15</td>
+                                <td>H. No. 10, New Delhi</td>
+                                <td>+91 98765 43210</td>
+                                <td>+91 99999 11111</td>
+                                <td><span class="badge badge-success">Link: P-001</span></td>
+                                <td>10 / A</td>
+                            </tr>
+                            <tr>
+                                <td>SM-002</td>
+                                <td>Ben Miller</td>
+                                <td>2009-01-22</td>
+                                <td>Apt 2B, Mumbai</td>
+                                <td>+91 91234 56789</td>
+                                <td>+91 88888 22222</td>
+                                <td><span class="badge badge-success">Link: P-002</span></td>
+                                <td>9 / B</td>
+                            </tr>
+                            <tr>
+                                <td>SM-003</td>
+                                <td>Chloe Davis</td>
+                                <td>2007-11-03</td>
+                                <td>Flat 5C, Bangalore</td>
+                                <td>+91 99887 76655</td>
+                                <td>+91 77777 33333</td>
+                                <td><span class="badge badge-success">Link: P-003</span></td>
+                                <td>11 / A</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="attendance" class="section" style="display: none;">
+                <div class="content-header">
+                    <h1>Attendance Record (DocType)</h1>
+                    <div class="breadcrumb">
+                        <span>Home</span> / <span>Attendance</span>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Select Date</label>
+                        <input type="date" value="2025-10-08">
+                    </div>
+                    <div class="form-group">
+                        <label>Select Class</label>
+                        <select>
+                            <option>Class 9</option>
+                            <option selected>Class 10</option>
+                            <option>Class 11</option>
+                            <option>Class 12</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Section</label>
+                        <select>
+                            <option selected>Section A</option>
+                            <option>Section B</option>
+                            <option>Section C</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="alert('Loading students for attendance...')">Load Students</button>
+
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student (Link)</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Late</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>STU001 - John Smith</td>
+                                <td><input type="radio" name="att1" checked></td>
+                                <td><input type="radio" name="att1"></td>
+                                <td><input type="radio" name="att1"></td>
+                                <td><input type="text" placeholder="Optional"></td>
+                            </tr>
+                            <tr>
+                                <td>STU002 - Emma Wilson</td>
+                                <td><input type="radio" name="att2" checked></td>
+                                <td><input type="radio" name="att2"></td>
+                                <td><input type="radio" name="att2"></td>
+                                <td><input type="text" placeholder="Optional"></td>
+                            </tr>
+                            <tr>
+                                <td>STU003 - Michael Brown</td>
+                                <td><input type="radio" name="att3"></td>
+                                <td><input type="radio" name="att3" checked></td>
+                                <td><input type="radio" name="att3"></td>
+                                <td><input type="text" placeholder="Optional"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+
+
+                    <br>
+                    <button class="btn-primary" onclick="alert('Attendance saved successfully! Frappe Validation Passed.')">Submit Attendance</button>
+                </div>
+            </div>
+
+            <div id="grades" class="section" style="display: none;">
+                <div class="content-header">
+                    <h1>Grade Sheet (DocType)</h1>
+                    <div class="breadcrumb">
+                        <span>Home</span> / <span>Grades</span>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Select Class</label>
+                        <select>
+                            <option selected>Class 10 - Section A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Subject</label>
+                        <select>
+                            <option selected>Mathematics (Link)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Exam Type</label>
+                        <select>
+                            <option selected>Mid-Term Exam</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student (Link)</th>
+                                <th>Subject (Link)</th>
+                                <th>Marks Obtained</th>
+                                <th>Grade (Auto)</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>STU001 - John Smith</td>
+                                <td>Mathematics</td>
+                                <td><input type="number" value="92" max="100"></td>
+                                <td><span class="badge badge-success">A+</span></td>
+                                <td><input type="text" placeholder="Excellent"></td>
+                            </tr>
+                            <tr>
+                                <td>STU002 - Emma Wilson</td>
+                                <td>Mathematics</td>
+                                <td><input type="number" value="85" max="100"></td>
+                                <td><span class="badge badge-success">A</span></td>
+                                <td><input type="text" placeholder="Good"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p class="logic-description">
+                    </p>
+
+                    <br>
+                    <button class="btn-primary" onclick="alert('Grades saved successfully! GPA updated on Student Master.')">Save Grades</button>
+                </div>
+            </div>
+            
+            <div id="course-management" class="section" style="display: none;">
+                <div class="content-header">
+                    <h1>Course Management (DocType)</h1>
+                    <div class="breadcrumb">
+                        <span>Home</span> / <span>Courses</span>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <input type="text" class="search-box" placeholder="Search courses...">
+                        <button class="btn-primary" onclick="showModal('addCourse')">+ Add New Course</button>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Name</th>
+                                <th>Credits</th>
+                                <th>Instructor (Link)</th>
+                                <th>Student Enrollment (Link)</th>
+                                <th>Timetable (Link)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MATH101</td>
+                                <td>Advanced Algebra</td>
+                                <td>4.0</td>
+                                <td>Prof. R. Khan</td>
+                                <td>150 Students</td>
+                                <td><span class="badge badge-success">View Schedule</span></td>
+                            </tr>
+                            <tr>
+                                <td>SCI102</td>
+                                <td>Physics Fundamentals</td>
+                                <td>5.0</td>
+                                <td>Dr. E. Gomez</td>
+                                <td>120 Students</td>
+                                <td><span class="badge badge-success">View Schedule</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="reports" class="section" style="display: none;">
+                <div class="content-header">
+                    <h1>Reports & Analytics</h1>
+                    <div class="breadcrumb">
+                        <span>Home</span> / <span>Reports</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="alert('Generating attendance report...')">
+                        <div class="stat-value">📊</div>
+                        <div class="stat-label">Attendance Report</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #fa709a, #fee140);" onclick="alert('Generating progress report...')">
+                        <div class="stat-value">📈</div>
+                        <div class="stat-label">Progress Report</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #30cfd0, #330867);" onclick="alert('Generating grade sheet...')">
+                        <div class="stat-value">📝</div>
+                        <div class="stat-label">Grade Sheet</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #a8edea, #fed6e3);" onclick="alert('Generating custom report...')">
+                        <div class="stat-value">🎯</div>
+                        <div class="stat-label">Custom Report</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Class Performance Comparison</h3>
+                    <div class="chart-placeholder">
+                        [Bar Chart: Performance by Class]
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Modal Title</h2>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalBody">
+                <form onsubmit="event.preventDefault(); alert('Form submitted!'); closeModal();">
+                    
+                    <div id="addStudentForm" class="form-section">
+                        <h3>Student Master Fields</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="studentName">Full Name</label>
+                                <input type="text" id="studentName" required placeholder="Name">
+                            </div>
+                            <div class="form-group">
+                                <label for="studentID">Student ID (Auto)</label>
+                                <input type="text" id="studentID" value="SM-00X" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="studentDOB">DOB</label>
+                                <input type="date" id="studentDOB" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="studentAddress">Address</label>
+                                <input type="text" id="studentAddress" placeholder="Address">
+                            </div>
+                            <div class="form-group">
+                                <label for="studentContact">Contact</label>
+                                <input type="tel" id="studentContact" placeholder="Phone/Email">
+                            </div>
+                            <div class="form-group">
+                                <label for="studentEmergency">Emergency Contact</label>
+                                <input type="tel" id="studentEmergency" placeholder="Emergency Contact">
+                            </div>
+                            <div class="form-group">
+                                <label for="studentParent">Parent/Guardian (Link)</label>
+                                <input type="text" id="studentParent" placeholder="Parent Name">
+                            </div>
+                            <div class="form-group">
+                                <label for="studentClass">Class/Section (Link)</label>
+                                <select id="studentClass" required>
+                                    <option>10/A</option><option>9/B</option><option>11/A</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Save Student</button>
+                    </div>
+
+                    <div id="addCourseForm" class="form-section">
+                        <h3>Course Management Fields</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="courseCode">Course Code</label>
+                                <input type="text" id="courseCode" required placeholder="e.g., MATH101">
+                            </div>
+                            <div class="form-group">
+                                <label for="courseName">Course Name</label>
+                                <input type="text" id="courseName" required placeholder="e.g., Advanced Algebra">
+                            </div>
+                            <div class="form-group">
+                                <label for="courseCredits">Credits</label>
+                                <input type="number" id="courseCredits" value="3.0" step="0.5" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="courseInstructor">Instructor (Link)</label>
+                                <input type="text" id="courseInstructor" required placeholder="e.g., Prof. Khan">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Save Course</button>
+                    </div>
+
+                    <div id="generateReportForm" class="form-section">
+                        <div class="form-group">
+                            <label for="reportType">Report Type</label>
+                            <select id="reportType" required>
+                                <option>Summary</option>
+                                <option>Detailed Student List</option>
+                                <option>Attendance Summary</option>
+                                <option>Grade Analysis</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reportPeriod">Time Period</label>
+                            <select id="reportPeriod" required>
+                                <option>Last 7 Days</option>
+                                <option>Current Semester</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">Generate Report</button>
+                    </div>
+
+                    <div id="editStudentForm" class="form-section">
+                        <p>Editing profile for: <strong id="editingStudentName"></strong></p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="editName">Full Name</label>
+                                <input type="text" id="editName" value="[Student Name]" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editGPA">GPA</label>
+                                <input type="number" id="editGPA" value="3.5" step="0.1" min="0" max="4.0" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        /**
+         * Function to show the selected content section and manage active states.
+         * @param {string} sectionId - The ID of the section to show (e.g., 'dashboard', 'students').
+         * @param {HTMLElement} clickedElement - The navigation or sidebar link that was clicked.
+         */
+        function showSection(sectionId, clickedElement) {
+            // 1. Hide all content sections and remove 'fade-in' class
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
+                section.classList.remove('fade-in');
+            });
+
+            // 2. Show the selected content section and add 'fade-in' class
+            const selectedSection = document.getElementById(sectionId);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+                selectedSection.classList.add('fade-in');
+            }
+
+            // 3. Update active state for both nav and sidebar links
+            const links = document.querySelectorAll('.nav-menu a, .sidebar-menu a');
+            links.forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Find and activate the corresponding links by sectionId/data-section attribute
+            document.querySelectorAll(`[data-section="${sectionId}"]`).forEach(link => {
+                link.classList.add('active');
+            });
+
+            // Prevent default link action (navigating to '#')
+            if (clickedElement && clickedElement.tagName === 'A') {
+                event.preventDefault();
+            }
+        }
+
+        /**
+         * Function to display a modal with dynamic content based on the type.
+         * @param {string} type - The type of modal to show ('addStudent', 'generateReport', 'editStudent', 'addCourse').
+         * @param {string} [data=''] - Optional data like a student name for editing.
+         */
+        function showModal(type, data = '') {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modalTitle');
+            const forms = document.querySelectorAll('.form-section');
+
+            // Hide all form sections first
+            forms.forEach(form => form.style.display = 'none');
+
+            // Set modal content based on type
+            if (type === 'addStudent') {
+                modalTitle.textContent = 'Add New Student 🧑‍🎓';
+                document.getElementById('addStudentForm').style.display = 'block';
+            } else if (type === 'addCourse') {
+                modalTitle.textContent = 'Add New Course 📚';
+                document.getElementById('addCourseForm').style.display = 'block';
+            } else if (type === 'generateReport') {
+                modalTitle.textContent = 'Generate Custom Report 📈';
+                document.getElementById('generateReportForm').style.display = 'block';
+            } else if (type === 'editStudent' && data) {
+                modalTitle.textContent = `Edit Student: ${data} 📝`;
+                document.getElementById('editingStudentName').textContent = data;
+                document.getElementById('editStudentForm').style.display = 'block';
+            } else {
+                modalTitle.textContent = 'Action Modal';
+            }
+
+            // Show the modal container
+            modal.style.display = 'flex';
+        }
+
+        /**
+         * Function to hide the modal.
+         */
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Initialize by ensuring the dashboard is shown on load (already set in HTML, but good practice)
+        document.addEventListener('DOMContentLoaded', () => {
+            // Find the initial active link to correctly call showSection on load
+            const initialLink = document.querySelector('.sidebar-menu a.active');
+            if (initialLink) {
+                // Pass the section ID from the data-section attribute
+                showSection(initialLink.getAttribute('data-section'), initialLink);
+            }
+        });
+    </script>
+</body>
+</html>
